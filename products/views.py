@@ -114,27 +114,29 @@ class ProductDetailView(View):
     def get(self, request, product_id):
         if not Product.objects.filter(id=product_id).exists():
             return JsonResponse({'message':'INVALID_ERROR'}, status=404)     
-
         product = Product.objects.prefetch_related(
             'productcolor_set__color',
             'bidding_set', 
             'productimage_set',
             Prefetch('bidding_set', queryset=Bidding.objects.filter(status_id=1, is_seller=1).order_by('-price', 'created_at'), to_attr="selling_bidding"),
             Prefetch('bidding_set', queryset=Bidding.objects.filter(status_id=1, is_seller=0).order_by('-price', 'created_at'), to_attr="buying_bidding"),
+            Prefetch('bidding_set', queryset=Bidding.objects.filter(status_id=1, is_seller=1).order_by('-created_at'), to_attr="selling_bidding_detail"),
+            Prefetch('bidding_set', queryset=Bidding.objects.filter(status_id=1, is_seller=0).order_by('-created_at'), to_attr="buying_bidding_detail")
         ).get(id=product_id)
-        
+
         contract_choice = request.GET.get('contract_choice', '1w')
         contract_period = {
             '3m':datetime.now()-relativedelta(months=3),
             '1m':datetime.now()-relativedelta(months=1),
             '1w':datetime.now()-timedelta(weeks=1)
         }
-        contract_all = Contract.objects.select_related('selling_bid__product').filter(selling_bid__product=product_id)
+
+        contract_all = Contract.objects.select_related('selling_bid__product').filter(selling_bid__product=product_id).order_by('-created_at')
         contracts    = contract_all.filter(created_at__range=(contract_period[contract_choice], datetime.now())).order_by('-created_at')
 
-        if contracts.count() >= 2:
-            latest_price          = contracts[0].selling_bid.price
-            old_price             = contracts[1].selling_bid.price
+        if contract_all.count() >= 2:
+            latest_price          = contract_all[0].selling_bid.price
+            old_price             = contract_all[1].selling_bid.price
             comparing_price       = latest_price - old_price
             comparing_price_ratio = round((comparing_price / old_price) * 100, 1)
         else:
@@ -142,7 +144,7 @@ class ProductDetailView(View):
 
         main_info = {
             'name'                     : product.name,
-            'recent_price'             : contracts[0].selling_bid.price if contracts[0].selling_bid.price else 0,
+            'recent_price'             : contract_all[0].selling_bid.price if contract_all.exists() else 0,
             'oldest_selling_bidding_id': product.selling_bidding[0].id if product.selling_bidding else None,
             'oldest_buying_bidding_id' : product.buying_bidding[0].id if product.buying_bidding else None,
             'current_selling_price'    : product.selling_bidding[0].price if product.selling_bidding else None,
@@ -166,11 +168,11 @@ class ProductDetailView(View):
             'selling_bidding':[{
                 'selling_bidding_date' : selling_bidding.created_at.strftime('%Y-%m-%d'),
                 'selling_bidding_price' :selling_bidding.price
-            } for selling_bidding in product.selling_bidding],
+            } for selling_bidding in product.selling_bidding_detail],
             'buying_bidding':[{
                 'buying_bidding_date':buying_bidding.created_at.strftime('%Y-%m-%d'),
                 'buying_bidding_price':buying_bidding.price
-            } for buying_bidding in product.buying_bidding],
+            } for buying_bidding in product.buying_bidding_detail],
         }
 
         product_info = {
@@ -179,7 +181,7 @@ class ProductDetailView(View):
             'color'         :[product_color.color.name for product_color in product.productcolor_set.all()],
             'original_price':product.original_price
         }
-
+        
         return JsonResponse({
             'message'        :'SUCCESS',
             'main_info'      :main_info,
