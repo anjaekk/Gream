@@ -9,7 +9,7 @@
        
 ## 📍 프로젝트 미리보기
 
-![https://s3-us-west-2.amazonaws.com/secure.notion-static.com/e50b630b-6b25-4817-8a08-cb5497749e7c/Jul-26-2021_13-16-47.gif](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/e50b630b-6b25-4817-8a08-cb5497749e7c/Jul-26-2021_13-16-47.gif)
+![](https://images.velog.io/images/anjaekk/post/a48be216-befc-4a4b-903b-db86a34a289a/Jul-26-2021_13-16-47.gif)
 
 ## 📍 Database 설계
 
