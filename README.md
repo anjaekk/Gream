@@ -135,7 +135,7 @@ class KakaoSigninView(View):
 
 
 <details>
-<summary>사용자 Authentication 확인</summary>
+<summary>사용자 Authorization</summary>
 <div markdown="1">       
 
 ```
