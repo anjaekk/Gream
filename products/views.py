@@ -10,6 +10,8 @@ from django.utils                import timezone
 
 from products.models             import Author, Theme, Color, Size, Product, ProductColor, ProductImage
 from orders.models               import Bidding, Contract
+
+
 class BestAuthorView(View):
     def get (self, request):
         biddings = Count('product__bidding', filter=Q(product__bidding__is_seller=0))
@@ -22,6 +24,7 @@ class BestAuthorView(View):
         ]
 
         return JsonResponse ({"results":results}, status = 200)
+
 
 class CategoryView(View):
     def get(self, request):
@@ -68,6 +71,8 @@ class CategoryView(View):
                 ]}
         ]
         return JsonResponse ({"results":results}, status = 200)
+
+
 class ProductView(View):
     def get(self, request):
         author_id = request.GET.getlist("author", None)
@@ -110,6 +115,8 @@ class ProductView(View):
             } for product in products[offset:limit]
         ]
         return JsonResponse({"product_count":count, "results":productslist}, status = 200)
+
+
 class ProductDetailView(View):
     def get(self, request, product_id):
         if not Product.objects.filter(id=product_id).exists():
